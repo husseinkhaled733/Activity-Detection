@@ -1,6 +1,8 @@
+import os
 from collections import deque
 import matplotlib.pyplot as plt
 import numpy as np
+from Evaluation import compute_clusters, compute_purity, compute_recall, compute_f1, compute_entropy
 from sklearn.cluster import DBSCAN
 from sklearn.decomposition import PCA
 from sklearn.metrics import silhouette_score
@@ -26,6 +28,79 @@ def readData():
             p_eval.append(np.array(np.array(s_eval)))
         aps_eval.append(np.array(p_eval))
     return np.array(aps_eval)
+
+
+def readData_means_flattened():
+    training_data_means = []
+    evaluation_data_means = []
+    flattened_training_data = []
+    flattened_evaluation_data = []
+    training_labels = []
+    evaluation_labels = []
+    data_directory = "C:\\Users\\DELL\\Downloads\\daily+and+sports+activities\\data"
+
+    # Step 1: Accessing the Data Directory
+    activities = os.listdir(data_directory)
+
+    # Step 2: Iterating Through Activity Folders
+    for activity in activities:
+        activity_path = os.path.join(data_directory, activity)
+        activity_number = int(activity.split("a")[1])
+
+        # Assigning labels
+        training_labels.extend([activity_number] * 48 * 8)
+        evaluation_labels.extend([activity_number] * 12 * 8)
+
+        # Step 3: Iterating Through Subject Folders
+        subjects = os.listdir(activity_path)
+        for subject in subjects:
+            subject_path = os.path.join(activity_path, subject)
+
+            # Step 4: Reading Text Files (Segments)
+            segments = os.listdir(subject_path)
+            training_segments = segments[:48]  # First 48 segments for training
+            evaluation_segments = segments[48:]  # Rest for evaluation
+
+            for segment_file in training_segments:
+                segment_file_path = os.path.join(subject_path, segment_file)
+                with open(segment_file_path, 'r') as file:
+                    segment_data = np.loadtxt(file, delimiter=',')
+                    mean_data = np.mean(segment_data, axis=0)  # Taking mean along columns
+                    training_data_means.append(mean_data)
+
+                    flattened_data = segment_data.flatten()  # Flattening the segment
+                    flattened_training_data.append(flattened_data)
+
+            for segment_file in evaluation_segments:
+                segment_file_path = os.path.join(subject_path, segment_file)
+                with open(segment_file_path, 'r') as file:
+                    segment_data = np.loadtxt(file, delimiter=',')
+                    mean_data = np.mean(segment_data, axis=0)  # Taking mean along columns
+                    evaluation_data_means.append(mean_data)
+
+                    flattened_data = segment_data.flatten()  # Flattening the segment
+                    flattened_evaluation_data.append(flattened_data)
+
+    # Convert the data lists into numpy arrays
+    training_data_means = np.array(training_data_means)
+    evaluation_data_means = np.array(evaluation_data_means)
+    flattened_training_data = np.array(flattened_training_data)
+    flattened_evaluation_data = np.array(flattened_evaluation_data)
+
+    # Apply PCA reduction
+    PCA_reduction = PCA(n_components=0.9)
+    PCA_training_data = PCA_reduction.fit_transform(flattened_training_data)
+    PCA_evaluation_data = PCA_reduction.transform(flattened_evaluation_data)
+
+    # Print dimensions
+    print("Training Data Means Shape:", training_data_means.shape)
+    print("Evaluation Data Means Shape:", evaluation_data_means.shape)
+    print("PCA Training Data Shape:", PCA_training_data.shape)
+    print("PCA Evaluation Data Shape:", PCA_evaluation_data.shape)
+    print("Training Labels Shape:", len(training_labels))
+    print("Evaluation Labels Shape:", len(evaluation_labels))
+
+    return training_data_means, evaluation_data_means, PCA_training_data, PCA_evaluation_data, training_labels, evaluation_labels
 
 
 def getPointsByMeans(data):
@@ -98,21 +173,26 @@ def extract_labels(clusters, n):
     return labels
 
 
-data_set = getPointsByMeans(readData())
+(training_data_means, evaluation_data_means, PCA_training_data, PCA_evaluation_data, training_labels,
+ evaluation_labels) = readData_means_flattened()
 
-# eps_values = np.arange(2, 20, step=0.1)
-# maxC = 0
-# e = 0
-# for eps in eps_values:
-#     clusters, labels = dbscan(data_set, eps, 11)    # min 13 eps 2.4
-#     print("Clusters at eps = ", eps, ": ", len(clusters))
-#     print("Labels at eps = ", eps, ": ", labels)
-#     if(len(clusters) > maxC):
-#         maxC = len(clusters)
-#         e = eps
-# print("best epsilon = ",e)
-# print("with number of cluser = ",maxC)
 eps = 2.4
-clusters, labels = dbscan(data_set, eps, 13)
-print("Clusters at eps = ", eps, ": ", len(clusters))
-print("Labels at eps = ", eps, ": ", labels)
+
+# First Approach using means
+clusters, labels = dbscan(evaluation_data_means, eps, 13)
+print("Method 1 Clusters at eps = ", eps, ": ", len(clusters))
+print("Method 1 Labels at eps = ", eps, ": ", labels)
+print("Method 1 Purity = ", compute_purity(compute_clusters(evaluation_labels, labels, len(np.unique(labels))),len(evaluation_data_means)))
+print("Method 1 Recall = ", compute_recall(compute_clusters(evaluation_labels, labels, len(np.unique(labels))),len(evaluation_data_means)))
+print("Method 1 F1 Score = ", compute_f1(compute_clusters(evaluation_labels, labels, len(np.unique(labels)))))
+print("Method 1 Conditional Entropy = ", compute_entropy(compute_clusters(evaluation_labels, labels, len(np.unique(labels))),len(evaluation_data_means)))
+
+# Second Approach using PCA
+clusters, labels = dbscan(PCA_evaluation_data, eps, 13)
+print("Method 2 Clusters at eps = ", eps, ": ", len(clusters))
+print("Method 2 Labels at eps = ", eps, ": ", labels)
+
+print("Method 2 Purity = ", compute_purity(compute_clusters(evaluation_labels, labels, len(np.unique(labels))),len(PCA_evaluation_data)))
+print("Method 2 Recall = ", compute_recall(compute_clusters(evaluation_labels, labels, len(np.unique(labels))),len(PCA_evaluation_data)))
+print("Method 2 F1 Score = ", compute_f1(compute_clusters(evaluation_labels, labels, len(np.unique(labels)))))
+print("Method 2 Conditional Entropy = ", compute_entropy(compute_clusters(evaluation_labels, labels, len(np.unique(labels))),len(PCA_evaluation_data)))
