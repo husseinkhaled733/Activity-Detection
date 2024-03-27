@@ -100,11 +100,11 @@ def extract_labels(clusters, n):
 
 data_set = getPointsByMeans(readData())
 
-# eps_values = np.arange(1, 20, step=0.5)
+# eps_values = np.arange(2, 20, step=0.1)
 # maxC = 0
 # e = 0
 # for eps in eps_values:
-#     clusters, labels = dbscan(data_set, eps, 10)
+#     clusters, labels = dbscan(data_set, eps, 11)    # min 13 eps 2.4
 #     print("Clusters at eps = ", eps, ": ", len(clusters))
 #     print("Labels at eps = ", eps, ": ", labels)
 #     if(len(clusters) > maxC):
@@ -112,7 +112,7 @@ data_set = getPointsByMeans(readData())
 #         e = eps
 # print("best epsilon = ",e)
 # print("with number of cluser = ",maxC)
-eps = 5
-clusters, labels = dbscan(data_set, eps, 10)
+eps = 2.4
+clusters, labels = dbscan(data_set, eps, 13)
 print("Clusters at eps = ", eps, ": ", len(clusters))
 print("Labels at eps = ", eps, ": ", labels)
