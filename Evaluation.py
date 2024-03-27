@@ -21,6 +21,8 @@ def compute_cluster_purity(cluster):
     :return: the purity of this cluster.
     """
     ni = len(cluster)  # number of classes in cluster i
+    if ni == 0:  # check if cluster is empty
+        return 0
     return max(Counter(cluster).values()) / ni
 
 
@@ -44,6 +46,9 @@ def compute_cluster_recall(clusters, i):
     :param i: the cluster number for which we want to calculate the recall.
     :return: the recall of this cluster.
     """
+    if not clusters[i]:  # Check if the cluster is empty
+        return 0  # Return 0 or any value that suits your logic
+
     target = max(clusters[i], key=clusters[i].count)  # The class with the maximum occurrences in the cluster
     target_cnt = 0  # Total number of occurrences of the target class across all clusters
     for cluster in clusters:
@@ -77,7 +82,8 @@ def compute_f1(clusters):
     for i in range(r):
         purity_i = compute_cluster_purity(clusters[i])  # purity of cluster i
         recall_i = compute_cluster_recall(clusters, i)  # recall of cluster i
-        f1 += 2 * purity_i * recall_i / (purity_i + recall_i)
+        if purity_i + recall_i != 0:  # Add this check to avoid division by zero
+            f1 += 2 * purity_i * recall_i / (purity_i + recall_i)
     return f1 / r
 
 
