@@ -21,7 +21,7 @@ def compute_cluster_purity(cluster):
     :return: the purity of this cluster.
     """
     ni = len(cluster)  # number of classes in cluster i
-    if ni == 0:  # check if cluster is empty
+    if ni == 0:  # check if the cluster is empty
         return 0
     return max(Counter(cluster).values()) / ni
 
