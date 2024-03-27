@@ -1,12 +1,8 @@
 import os
 from collections import deque
-import matplotlib.pyplot as plt
 import numpy as np
 from Evaluation import compute_clusters, compute_purity, compute_recall, compute_f1, compute_entropy
-from sklearn.cluster import DBSCAN
 from sklearn.decomposition import PCA
-from sklearn.metrics import silhouette_score
-from sklearn.neighbors import NearestNeighbors
 
 
 def readData():
@@ -136,7 +132,6 @@ def dbscan(dataset, eps, min_pts):
 
 
 def expand_cluster(dataset, visited, neighbors, cluster, eps, min_pts):
-    # cluster.append(neighbors)
     for index in neighbors:
         if index not in visited:
             cluster.append(index)
@@ -182,17 +177,23 @@ eps = 2.4
 clusters, labels = dbscan(evaluation_data_means, eps, 13)
 print("Method 1 Clusters at eps = ", eps, ": ", len(clusters))
 print("Method 1 Labels at eps = ", eps, ": ", labels)
-print("Method 1 Purity = ", compute_purity(compute_clusters(evaluation_labels, labels, len(np.unique(labels))),len(evaluation_data_means)))
-print("Method 1 Recall = ", compute_recall(compute_clusters(evaluation_labels, labels, len(np.unique(labels))),len(evaluation_data_means)))
+print("Method 1 Purity = ",
+      compute_purity(compute_clusters(evaluation_labels, labels, len(np.unique(labels))), len(evaluation_data_means)))
+print("Method 1 Recall = ",
+      compute_recall(compute_clusters(evaluation_labels, labels, len(np.unique(labels))), len(evaluation_data_means)))
 print("Method 1 F1 Score = ", compute_f1(compute_clusters(evaluation_labels, labels, len(np.unique(labels)))))
-print("Method 1 Conditional Entropy = ", compute_entropy(compute_clusters(evaluation_labels, labels, len(np.unique(labels))),len(evaluation_data_means)))
+print("Method 1 Conditional Entropy = ",
+      compute_entropy(compute_clusters(evaluation_labels, labels, len(np.unique(labels))), len(evaluation_data_means)))
 
 # Second Approach using PCA
 clusters, labels = dbscan(PCA_evaluation_data, eps, 13)
 print("Method 2 Clusters at eps = ", eps, ": ", len(clusters))
 print("Method 2 Labels at eps = ", eps, ": ", labels)
 
-print("Method 2 Purity = ", compute_purity(compute_clusters(evaluation_labels, labels, len(np.unique(labels))),len(PCA_evaluation_data)))
-print("Method 2 Recall = ", compute_recall(compute_clusters(evaluation_labels, labels, len(np.unique(labels))),len(PCA_evaluation_data)))
+print("Method 2 Purity = ",
+      compute_purity(compute_clusters(evaluation_labels, labels, len(np.unique(labels))), len(PCA_evaluation_data)))
+print("Method 2 Recall = ",
+      compute_recall(compute_clusters(evaluation_labels, labels, len(np.unique(labels))), len(PCA_evaluation_data)))
 print("Method 2 F1 Score = ", compute_f1(compute_clusters(evaluation_labels, labels, len(np.unique(labels)))))
-print("Method 2 Conditional Entropy = ", compute_entropy(compute_clusters(evaluation_labels, labels, len(np.unique(labels))),len(PCA_evaluation_data)))
+print("Method 2 Conditional Entropy = ",
+      compute_entropy(compute_clusters(evaluation_labels, labels, len(np.unique(labels))), len(PCA_evaluation_data)))
