@@ -48,36 +48,34 @@ def getSimilarityMatrix(points, gamma):
 def getEigenAttributes(matrix, k):
     eigen_values, eigen_vectors = np.linalg.eig(matrix)
     idx = eigen_values.argsort()[::-1]
-    eigen_vectors = np.array(eigen_vectors[idx, :]).transpose()
-    p = []
-    n = [0 for _ in range(k)]
-    for l, eigen_vector in zip(n, eigen_vectors):
-        if len(p) == 0:
-            p.append(eigen_vector)
-        else:
-            p = np.append(p, [eigen_vector], axis=0)
-    return np.array(p).transpose()
+    eigen_vectors = np.flip(np.array(eigen_vectors.transpose()[idx, :]))
+    return np.flip(np.array(eigen_vectors[:k]).transpose())
 
 
-sim_mat = getSimilarityMatrix(getPointsByMeans(readData()), 1)
-for i in range(len(sim_mat)):
-    x = np.sum(sim_mat[i]) - 1
-    if x > 0.00000000000000000001:
-        sim_mat[i] /= -x
-        sim_mat[i][i] = 1.0
-u_mat = np.flip(np.real(getEigenAttributes(sim_mat, 19)))
-for i in range(len(u_mat)):
-    vec_sum = np.sqrt(np.sum(u_mat[i] ** 2))
-    u_mat[i] /= vec_sum
-kmeans = KMeans(n_clusters=19)
-kmeans.fit(u_mat)
-print(metrics.silhouette_score(u_mat, kmeans.labels_))
-labels_file = open("labels.txt", "w")
-for i in range(19):
-    for j in range(8):
-        for q in range(12):
-            labels_file.write(str(kmeans.labels_[i*96+j*12+q]))
-            labels_file.write(" ")
-        labels_file.write('\n')
-    labels_file.write('\n')
-labels_file.close()
+sim = np.array([[0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0], [1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0],
+                [1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0], [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0],
+                [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0]])
+sim_mat = getSimilarityMatrix(getPointsByMeans(readData()), 0.00001)
+for i in range(len(sim)):
+    x = np.sum(sim[i])
+    sim[i][i] += -x
+    sim[i] *= -1
+    sim[i] /= x
+    sim[i][sim[i] == -0] = 0
+u_mat = np.flip(np.real(getEigenAttributes(sim, 2)))
+print(u_mat)
+# for i in range(len(u_mat)):
+#     vec_sum = np.sqrt(np.sum(u_mat[i] ** 2))
+#     u_mat[i] /= vec_sum
+# kmeans = KMeans(n_clusters=2)
+# kmeans.fit(u_mat)
+# print(metrics.silhouette_score(u_mat, kmeans.labels_))
+# labels_file = open("labels.txt", "w")
+# for i in range(19):
+#     for j in range(8):
+#         for q in range(12):
+#             labels_file.write(str(kmeans.labels_[i*96+j*12+q]))
+#             labels_file.write(" ")
+#         labels_file.write('\n')
+#     labels_file.write('\n')
+# labels_file.close()
